@@ -28,7 +28,7 @@ export async function register(req: Request, res: Response): Promise<void> {
     );
     const user = result.rows[0];
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, env.JWT_SECRET, {
-      expiresIn: env.JWT_EXPIRES_IN,
+      expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'],
     });
     res.status(201).json({ token, user });
   } catch (err) {
@@ -59,7 +59,7 @@ export async function login(req: Request, res: Response): Promise<void> {
       return;
     }
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, env.JWT_SECRET, {
-      expiresIn: env.JWT_EXPIRES_IN,
+      expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'],
     });
     const { password_hash: _, ...safeUser } = user;
     res.json({ token, user: safeUser });

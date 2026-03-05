@@ -1,0 +1,126 @@
+> i want to push the project to github and then pull it to my debian vps
+
+● Bash(cd /c/working/MyAI/FurnitureShop && git status 2>&1; git remote -v 2>&1)
+  ⎿  Error: Exit code 128
+     fatal: not a git repository (or any of the parent directories): .git
+     fatal: not a git repository (or any of the parent directories): .git
+
+     fatal: not a git repository (or any of the parent directories): .git
+     fatal: not a git repository (or any of the parent directories): .git
+
+● Not a git repo yet. Here's the complete flow:
+
+  ---
+  Part 1 — Push to GitHub (from your Windows machine)
+
+  Step 1 — Create the repo on GitHub
+
+  Go to github.com/new and create a repo named furniture-shop (private or public, no README/gitignore — we have those).
+
+  Step 2 — Initialize git and push
+
+  Run this in your terminal from the project folder:
+
+  cd /c/working/MyAI/FurnitureShop
+
+  git init
+  git add .
+  git commit -m "feat: initial project setup — Angular + Express + PostgreSQL"
+  git branch -M main
+  git remote add origin https://github.com/ndlong75/furniture-shop.git
+  git push -u origin main
+
+  If asked for credentials, use a GitHub Personal Access Token (not your password).
+  Generate one at: github.com/settings/tokens → Fine-grained → repo permissions → Read & Write contents.
+
+  ---
+  Part 2 — Pull and run on your Debian VPS
+
+  SSH into your VPS, then run these once:
+
+  Step 1 — Install dependencies
+
+  sudo apt update && sudo apt install -y git curl
+
+  # Install Node.js 20
+  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+  sudo apt install -y nodejs
+
+  # Install PostgreSQL
+  sudo apt install -y postgresql postgresql-contrib
+
+  Step 2 — Create the database
+
+  sudo -u postgres psql
+  CREATE USER furnitureuser WITH PASSWORD 'your-strong-password';
+  CREATE DATABASE furnituredb OWNER furnitureuser;
+  GRANT ALL PRIVILEGES ON DATABASE furnituredb TO furnitureuser;
+  \q
+
+  Step 3 — Clone the repo
+
+  mkdir -p /opt/furniture-shop
+  git clone https://github.com/ndlong75/furniture-shop.git /opt/furniture-shop
+  cd /opt/furniture-shop/backend
+
+  Step 4 — Create .env
+
+  cp .env.example .env
+  nano .env
+
+  Set these values:
+
+  NODE_ENV=production
+  PORT=3000
+  DATABASE_URL=postgresql://furnitureuser:your-strong-password@localhost:5432/furnituredb
+  JWT_SECRET=generate-a-long-random-secret-here
+  JWT_EXPIRES_IN=7d
+  FRONTEND_URL=http://your-vps-ip-or-domain
+  SEED_ADMIN_PASSWORD=your-admin-password
+
+  Generate a strong JWT_SECRET:
+  node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+
+  Step 5 — Install, migrate, seed, build
+
+  cd /opt/furniture-shop/backend
+  npm install
+  npm run build
+  npm run migrate
+  npm run seed
+
+  Step 6 — Run the backend
+
+  For a quick test:
+  node dist/index.js
+
+  For production (keep running after SSH disconnect), install PM2:
+  sudo npm install -g pm2
+  pm2 start dist/index.js --name furniture-backend
+  pm2 save
+  pm2 startup   # follow the printed command to auto-start on reboot
+
+  Test it:
+  curl http://localhost:3000/api/health
+  # → {"status":"ok","timestamp":"..."}
+
+  ---
+  Part 3 — Future updates (after first setup)
+
+  Whenever you push changes to GitHub, on the VPS just run:
+
+  cd /opt/furniture-shop
+  git pull origin main
+  cd backend
+  npm install          # only needed if package.json changed
+  npm run build
+  npm run migrate      # only needed if new migrations
+  pm2 restart furniture-backend
+
+  ---
+  What's your VPS situation? Do you also want to:
+  - Set up Nginx as a reverse proxy (so the API is accessible on port 80)?
+  - Build and serve the Angular frontend from the same VPS?
+  - Set up SSL with Let's Encrypt?
+
+✻ Crunched for 39s

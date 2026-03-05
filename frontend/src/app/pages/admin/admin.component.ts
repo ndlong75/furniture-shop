@@ -6,6 +6,12 @@ import { OrderService } from '../../services/order.service';
 import { Product, Category } from '../../models/product.model';
 import { Order, OrderStatus } from '../../models/order.model';
 
+interface AdminOrder extends Order {
+  user_name: string;
+  user_email: string;
+  item_count: number;
+}
+
 @Component({
   selector: 'app-admin',
   standalone: true,
@@ -72,7 +78,7 @@ import { Order, OrderStatus } from '../../models/order.model';
             @for (o of orders; track o.id) {
               <tr>
                 <td class="mono">#{{ o.id.substring(0,8).toUpperCase() }}</td>
-                <td>{{ (o as any).user_name }}</td>
+                <td>{{ o.user_name }}</td>
                 <td>{{ o.created_at | date:'dd/MM/yy HH:mm' }}</td>
                 <td>{{ o.total_amount | currency:'VND':'symbol':'1.0-0' }}</td>
                 <td>
@@ -120,7 +126,7 @@ export class AdminComponent implements OnInit {
   tab = 'products';
   products: Product[] = [];
   categories: Category[] = [];
-  orders: Order[] = [];
+  orders: AdminOrder[] = [];
   showForm = false;
   editId: string | null = null;
   form: Partial<Product> = {};
@@ -167,7 +173,9 @@ export class AdminComponent implements OnInit {
     );
   }
 
-  loadOrders() { this.orderService.getAllOrders().subscribe(o => this.orders = o); }
+  loadOrders() {
+    this.orderService.getAllOrders().subscribe(o => this.orders = o as AdminOrder[]);
+  }
 
   updateStatus(id: string, event: Event) {
     const status = (event.target as HTMLSelectElement).value;

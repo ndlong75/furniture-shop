@@ -11,6 +11,7 @@ export const env = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   PORT: process.env.PORT || '3000',
   DATABASE_URL: requireEnv('DATABASE_URL'),
+  DATABASE_SSL: process.env.DATABASE_SSL || 'false',
   JWT_SECRET: requireEnv('JWT_SECRET'),
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
   FRONTEND_URL: requireEnv('FRONTEND_URL'),

@@ -1,10 +1,14 @@
 import { Pool } from 'pg';
 import { env } from './env';
 
+// DATABASE_SSL=true  → SSL with certificate verification (managed cloud DBs: RDS, Supabase, etc.)
+// DATABASE_SSL=false → no SSL (local PostgreSQL on the same server)
+// default: false
+const sslConfig = env.DATABASE_SSL === 'true' ? { rejectUnauthorized: true } : false;
+
 export const pool = new Pool({
   connectionString: env.DATABASE_URL,
-  // rejectUnauthorized: true is the default — certificates are verified in production
-  ssl: env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : false,
+  ssl: sslConfig,
 });
 
 export async function query(text: string, params?: unknown[]) {

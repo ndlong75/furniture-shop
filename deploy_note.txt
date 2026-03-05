@@ -113,6 +113,11 @@
 
   cd /opt/furniture-shop
   git pull origin main
+
+  (
+Throw away my changes, match remote: git fetch && git reset --hard origin/main
+
+  )
   cd backend
   npm install          # only needed if package.json changed
   npm run build

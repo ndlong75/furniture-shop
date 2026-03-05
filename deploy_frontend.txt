@@ -1,0 +1,72 @@
+> how to start frontend on the vps ?
+
+● The frontend needs to be built (Angular → static files) then served with Nginx.
+
+  Step 1 — Install Nginx
+
+  sudo apt install -y nginx
+
+  Step 2 — Build the Angular frontend
+
+  cd /opt/furniture-shop/frontend
+  npm install
+  npm run build:prod
+  Built files will be at dist/furniture-shop/browser/.
+
+  Step 3 — Copy files to Nginx web root
+
+  sudo mkdir -p /var/www/furniture-shop
+  sudo cp -r dist/furniture-shop/browser/. /var/www/furniture-shop/
+
+  Step 4 — Configure Nginx
+
+  sudo nano /etc/nginx/sites-available/furniture-shop
+
+  Paste this (replace your-vps-ip with your actual VPS IP or domain):
+  server {
+      listen 80;
+      server_name your-vps-ip;
+
+      root /var/www/furniture-shop;
+      index index.html;
+
+      # Angular SPA — all routes serve index.html
+      location / {
+          try_files $uri $uri/ /index.html;
+      }
+
+      # Proxy /api to backend
+      location /api/ {
+          proxy_pass http://localhost:3000/api/;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      }
+
+      gzip on;
+      gzip_types text/plain text/css application/json application/javascript text/javascript;
+  }
+
+  Step 5 — Enable the site
+
+  sudo ln -s /etc/nginx/sites-available/furniture-shop /etc/nginx/sites-enabled/
+  sudo nginx -t          # test config — must say "ok"
+  sudo systemctl reload nginx
+
+  Step 6 — Update backend .env with your real URL
+
+  nano /opt/furniture-shop/backend/.env
+  Change FRONTEND_URL to your VPS IP:
+  FRONTEND_URL=http://your-vps-ip
+  Then restart the backend:
+  pm2 restart furniture-backend
+  # or if not using pm2:
+  cd /opt/furniture-shop/backend && node dist/index.js
+
+  ---
+  Open http://your-vps-ip in your browser — the shop should be live.
+
+  Future deploys — after git pull, just rebuild and copy:
+  cd /opt/furniture-shop/frontend
+  npm run build:prod
+  sudo cp -r dist/furniture-shop/browser/. /var/www/furniture-shop/

@@ -1,3 +1,5 @@
+22
+
 > i want to push the project to github and then pull it to my debian vps
 
 ● Bash(cd /c/working/MyAI/FurnitureShop && git status 2>&1; git remote -v 2>&1)
@@ -124,3 +126,4 @@
   - Set up SSL with Let's Encrypt?
 
 ✻ Crunched for 39s
+
